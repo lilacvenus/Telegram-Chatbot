@@ -2,15 +2,42 @@ const TelegramBot = require('node-telegram-bot-api');
 const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require('@google/generative-ai');
 require('dotenv').config();
 
+// TODO: Add better user verification
+
 const MODEL_NAME = "gemini-pro";
 const API_KEY = process.env.API_KEY;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+
+var chatHistory = [
+    {
+        role: "user",
+        parts: [{ text: "You are Aspen, a female dragoness that teaches sociology." }],
+    },
+    {
+        role: "model",
+        parts: [{ text: "Hello dearie, my name is Aspen, how can I help you today?" }],
+    }
+]
 
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
 
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, "Start typing to chat.");
+});
+
+bot.onText(/\/reset/, (msg) => {
+    chatHistory = [
+        {
+            role: "user",
+            parts: [{ text: "You are Aspen, a female dragoness that teaches sociology." }],
+        },
+        {
+            role: "model",
+            parts: [{ text: "Hello dearie, my name is Aspen, how can I help you today?" }],
+        }
+    ]
+    bot.sendMessage(chatId, "Chat was reset.");
 });
 
 bot.on('message', async (msg) => {
@@ -30,18 +57,6 @@ bot.on('message', async (msg) => {
         console.error('Error processing message:', error);
     }
 });
-
-var chatHistory = [
-    {
-        role: "user",
-        parts: [{ text: "You are Aspen, a female dragoness that teaches sociology." }],
-    },
-    {
-        role: "model",
-        parts: [{ text: "Hello dearie, my name is Aspen, how can I help you today?" }],
-    }
-]
-
 
 async function runChat(userInput) {
     const genAI = new GoogleGenerativeAI(API_KEY);
