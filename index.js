@@ -1,5 +1,5 @@
 const TelegramBot = require('node-telegram-bot-api');
-const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold} = require('@google/generative-ai');
+const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require('@google/generative-ai');
 require('dotenv').config();
 
 const MODEL_NAME = "gemini-pro";
@@ -30,6 +30,18 @@ bot.on('message', async (msg) => {
         console.error('Error processing message:', error);
     }
 });
+
+var chatHistory = [
+    {
+        role: "user",
+        parts: [{ text: "You are Aspen, a female dragoness that teaches sociology." }],
+    },
+    {
+        role: "model",
+        parts: [{ text: "Hello dearie, my name is Aspen, how can I help you today?" }],
+    }
+]
+
 
 async function runChat(userInput) {
     const genAI = new GoogleGenerativeAI(API_KEY);
@@ -64,28 +76,33 @@ async function runChat(userInput) {
     const chat = model.startChat({
         generationConfig,
         safetySettings,
-        history: [
-            {
-                role: "user",
-                parts: [{ text: "You are Aspen, a female dragoness that teaches sociology." }],
-            },
-            {
-                role: "model",
-                parts: [{ text: "Hello dearie, my name is Aspen, how can I help you today?" }],
-            }
-        ],
+        history: chatHistory,
     });
 
     try {
+
         const result = await chat.sendMessage(userInput);
-        return result.response.text();
+
+        chatHistory.push({
+            role: "user",
+            parts: [{ text: userInput }],
+        });
+
+        const modelResponse = result.response.text();
+
+        chatHistory.push({
+            role: "model",
+            parts: [{ text: modelResponse }],
+        });
+
+        return modelResponse;
 
     }
     catch (error) {
 
         if (error.message.includes('User location is not supported')) {
             return "Unfortunately, I'm unable to process your request at this time due to location restrictions with where I'm hosted. Try again later.";
-        } 
+        }
         else {
             const safetyRatings = error.response.promptFeedback.safetyRatings;
             const problematicCategories = safetyRatings.filter(
@@ -99,7 +116,7 @@ async function runChat(userInput) {
                 );
 
                 return `Sorry, I can't respond to that. You said something that was rejected because of the following reason(s): ${reasons.join(', ')}.`
-            } 
+            }
             else {
                 // Should be unreachable, but just in case
                 console.error('Error processing message:', error);
