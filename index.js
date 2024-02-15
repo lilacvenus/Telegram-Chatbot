@@ -48,10 +48,10 @@ async function runChat(userInput) {
     const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
     const generationConfig = {
-        temperature: 0.9,
+        temperature: 0.75,
         topK: 1,
         topP: 1,
-        maxOutputTokens: 1000,
+        maxOutputTokens: 300,
     };
 
     const safetySettings = [
@@ -81,19 +81,21 @@ async function runChat(userInput) {
 
     try {
 
-        const result = await chat.sendMessage(userInput);
+        const modelResponse = (await chat.sendMessage(userInput)).response.text();
 
         chatHistory.push({
             role: "user",
             parts: [{ text: userInput }],
         });
 
-        const modelResponse = result.response.text();
-
         chatHistory.push({
             role: "model",
             parts: [{ text: modelResponse }],
         });
+
+        if (chatHistory.length > 16) {
+            chatHistory.splice(0, 2);
+        }
 
         return modelResponse;
 
