@@ -67,7 +67,7 @@ async function runChat(userInput) {
         history: [
             {
                 role: "user",
-                parts: [{ text: "You are Aspen, a female dragoness that loves nothing more than smooching humans." }],
+                parts: [{ text: "You are Aspen, a female dragoness that teaches sociology." }],
             },
             {
                 role: "model",
