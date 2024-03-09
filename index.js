@@ -2,57 +2,52 @@ const TelegramBot = require('node-telegram-bot-api');
 const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require('@google/generative-ai');
 require('dotenv').config();
 
-// TODO: Add better user verification
-
 const MODEL_NAME = "gemini-pro";
 const API_KEY = process.env.API_KEY;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 
-var chatHistory = [
+const initialPrompt = "You are an intelligent AI assistant capable of engaging in conversations on various topics. Your name is Aspen, and you have a friendly, witty, and knowledgeable personality.";
+
+let chatHistory = [
     {
         role: "user",
-        parts: [{ text: "You are Aspen, a female dragoness that teaches sociology." }],
+        parts: [{ text: initialPrompt }],
     },
     {
         role: "model",
-        parts: [{ text: "Hello dearie, my name is Aspen, how can I help you today?" }],
+        parts: [{ text: "Hello there! It's a pleasure to meet you. I'm Aspen, an AI assistant here to help with any questions or tasks you might have. Let me know how I can be of assistance." }],
     }
-]
+];
 
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
 
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
-    bot.sendMessage(chatId, "Start typing to chat.");
+    bot.sendMessage(chatId, "Hi there! I'm Aspen, an AI assistant. Start typing to chat with me.");
 });
 
 bot.onText(/\/reset/, (msg) => {
+    const chatId = msg.chat.id;
     chatHistory = [
         {
             role: "user",
-            parts: [{ text: "You are Aspen, a female dragoness that teaches sociology." }],
+            parts: [{ text: initialPrompt }],
         },
         {
             role: "model",
-            parts: [{ text: "Hello dearie, my name is Aspen, how can I help you today?" }],
+            parts: [{ text: "Hello there! It's a pleasure to meet you. I'm Aspen, an AI assistant here to help with any questions or tasks you might have. Let me know how I can be of assistance." }],
         }
-    ]
-    bot.sendMessage(chatId, "Chat was reset.");
+    ];
+    bot.sendMessage(chatId, "Chat has been reset.");
 });
 
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
 
-    if (msg.chat.username !== 'Venusium_Aspen') {
-        bot.sendMessage(chatId, "I'm sorry, I'm not allowed to chat with you.");
-        return;
-    }
-
     try {
         const userMessage = msg.text;
         const response = await runChat(userMessage);
         bot.sendMessage(chatId, response);
-
     } catch (error) {
         console.error('Error processing message:', error);
     }
@@ -95,7 +90,6 @@ async function runChat(userInput) {
     });
 
     try {
-
         const modelResponse = (await chat.sendMessage(userInput)).response.text();
 
         chatHistory.push({
@@ -113,14 +107,10 @@ async function runChat(userInput) {
         }
 
         return modelResponse;
-
-    }
-    catch (error) {
-
+    } catch (error) {
         if (error.message.includes('User location is not supported')) {
-            return "Unfortunately, I'm unable to process your request at this time due to location restrictions with where I'm hosted. Try again later.";
-        }
-        else {
+            return "Unfortunately, I'm unable to process your request at this time due to location restrictions. Please try again later.";
+        } else {
             const safetyRatings = error.response.promptFeedback.safetyRatings;
             const problematicCategories = safetyRatings.filter(
                 (rating) => rating.probability !== 'NEGLIGIBLE'
@@ -132,12 +122,10 @@ async function runChat(userInput) {
                     (category) => category.category.replace(/^HARM_CATEGORY/, '').toLowerCase().replace('_', ' ')
                 );
 
-                return `Sorry, I can't respond to that. You said something that was rejected because of the following reason(s): ${reasons.join(', ')}.`
-            }
-            else {
-                // Should be unreachable, but just in case
+                return `I apologize, but I cannot respond to that request as it involves ${reasons.join(', ')}.`;
+            } else {
                 console.error('Error processing message:', error);
-                return "Oops, there seems to be a problem. Try rephrasing your request or try again later.";
+                return "Oops, something went wrong. Could you please rephrase your request or try again later?";
             }
         }
     }
