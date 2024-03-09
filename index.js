@@ -5,6 +5,7 @@ require('dotenv').config();
 const MODEL_NAME = "gemini-pro";
 const API_KEY = process.env.API_KEY;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+const ALLOWED_USERNAME = Venusium_Aspen;
 
 const initialPrompt = "You are an intelligent AI assistant capable of engaging in conversations on various topics. Your name is Aspen, and you have a friendly, witty, and knowledgeable personality.";
 
@@ -43,6 +44,11 @@ bot.onText(/\/reset/, (msg) => {
 
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
+
+    if (msg.chat.username !== ALLOWED_USERNAME) {
+        bot.sendMessage(chatId, "I'm sorry, I'm not allowed to chat with you.");
+        return;
+    }
 
     try {
         const userMessage = msg.text;
