@@ -1,6 +1,6 @@
 # AI Assistant Telegram Bot
 
-This project is a Telegram bot that uses the Google Generative AI API to create an AI assistant named Claude. The assistant has a friendly, witty, and knowledgeable personality and can engage in conversations on various topics.
+This project is a Telegram bot that uses the Google Generative AI API to create an AI assistant named Aspen. The assistant has a friendly, witty, and knowledgeable personality and can engage in conversations on various topics.
 
 ## Prerequisites
 
